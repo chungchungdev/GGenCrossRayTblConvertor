@@ -21,8 +21,8 @@ fun decodeToFile(src: Path, destDir: String) {
     val startIndex = findContentStartIndex(rawBytes)
     val content = rawBytes.copyOfRange(startIndex, rawBytes.size)
     val line = mutableListOf<Byte>()
-    val a = byteArrayOf()
     val contentByLine = StringBuilder()
+
     for (i in content.indices) {
         if (content[i] != 0.toByte()) {
             line.add(content[i])
