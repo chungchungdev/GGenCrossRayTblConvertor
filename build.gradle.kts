@@ -47,6 +47,7 @@ tasks.named<KotlinCompilationTask<*>>("compileKotlin").configure {
     compilerOptions.freeCompilerArgs.apply {
         add("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
         add("-opt-in=kotlin.contracts.ExperimentalContracts")
+        add("-opt-in=kotlin.ExperimentalUnsignedTypes")
     }
 }
 
