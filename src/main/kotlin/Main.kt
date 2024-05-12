@@ -39,6 +39,7 @@ fun decodeToFile(src: Path, destDir: String) {
     }
     val finalContent = contentByLine.toString()
         .also { println("final content char count: ${it.length}") }
+
     FileSystem.SYSTEM.sink("$destDir$filename-okio$fileExtension".toPath()).buffer().writeUtf8(finalContent)
     Files.writeString("$destDir$filename-nio$fileExtension".toPath().toNioPath(), finalContent, Charsets.UTF_8)
 
