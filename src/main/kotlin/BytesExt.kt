@@ -2,19 +2,22 @@ package com.chungchungdev
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.experimental.and
+import kotlin.experimental.or
 
 fun main() {
-    val third = 0x12345c70
-    val firstByte = 0x000000ff and third
-    val secondByte = (third shr 8) and 0x0000ff
-    val thirdByte = (third shr 16) and 0x00ff
-    val fourthByte = (third shr 24) and 0xff
-    /*println(firstByte.toHexString())
-    println(secondByte.toHexString())
-    println(thirdByte.toHexString())
-    println(fourthByte.toHexString())*/
-    val a = third.toBigEndianOctetBytes()
-    println(a.contentToString())
+    val thirdInt = 0x12345cae
+    val second = byteArrayOf(-117, 11, 0, 0, 0, 0, 0, 0)
+    val secondText = "-117,11,0,0,0,0,0,0".split(",")
+        .map { it.toByte() }
+        .toByteArray()
+        .contentToString().also { println(it) }
+    val third = byteArrayOf(112, 92, 0, 0, 0, 0, 0, 0)
+    val thirdText = "112,92,0,0,0,0,0,0".split(",")
+        .map { it.toByte() }
+        .toByteArray()
+        .contentToString().also { println(it) }
+    //val bytes
 }
 
 fun Int.toBigEndianOctetBytes(): ByteArray {
@@ -33,3 +36,18 @@ fun Int.toBigEndianOctetBytes(): ByteArray {
         0x00
     )
 }
+
+fun String.toOctetBytes() =
+    this.split(",")
+        .map { it.toByte() }
+        .toByteArray()
+
+fun ByteArray.intFromBigEndianOctetBytes(): Int {
+    require(this.size == 8) { "Parsing wrong bytes! Your bytes have ${this.size} bytes, but 8 is required." }
+    return this[0].toNonNegativeInt() or
+            (this[1].toNonNegativeInt() shl 8) or
+            (this[2].toNonNegativeInt() shl 16) or
+            (this[3].toNonNegativeInt() shl 24)
+}
+
+fun Byte.toNonNegativeInt() = this.toUByte().toInt()

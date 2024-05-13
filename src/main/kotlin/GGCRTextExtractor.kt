@@ -11,7 +11,7 @@ class GGCRTextExtractor(
     private val logger: KLogger
 ) {
     // First octet = file signature, keep it
-    // Second octet = unknown??? just keep it
+    // Second octet = table items count
     // Then, each octet is the start index of a string item
     // Octet containing zero only = end of position mapping
     // String items, each is separated by a 0x00 byte
@@ -70,6 +70,7 @@ class GGCRTextExtractor(
             }
             //println(lines.joinToString("\n"))
             logger.trace { lines.fold(0) { acc, s -> acc + s.length } }
+            logger.debug { "item count: ${lines.size} lines" }
             return lines
         }
     }
