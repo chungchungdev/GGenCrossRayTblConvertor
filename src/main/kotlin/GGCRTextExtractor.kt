@@ -1,5 +1,6 @@
 package com.chungchungdev
 
+import com.chungchungdev.model.TblItem
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -24,7 +25,7 @@ class GGCRTextExtractor(
     }
 
     fun extractFile(src: Path, outDir: Path, format: Json) {
-        val lines = extractStrings(src)
+        val lines = extractStrings(src).map { TblItem(it, it) }
         val outputJson = format.encodeToString(lines)
         val outPath = "$outDir/${src.name.split(".")[0]}.txt".toPath()
         logger.debug { "outPath: $outPath" }

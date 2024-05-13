@@ -21,7 +21,9 @@ class GGCRTextRepacker(
         val outPath = "$outDir/${src.name.split(".")[0]}.tbl".toPath()
 
         FileSystem.SYSTEM.source(src).buffer().use { source ->
-            val lines = source.readUtf8().let { format.decodeFromString<List<String>>(it) }
+            val lines = source.readUtf8()
+                .let { format.decodeFromString<List<TblItem>>(it) }
+                .map { it.translated }
 
             FileSystem.SYSTEM.sink(outPath).buffer().use { sink ->
                 // Write file signature
@@ -55,11 +57,4 @@ class GGCRTextRepacker(
             }
         }
     }
-
-    /*fun writeIndexBytes(contentStartIndex: Int, rawBytes: ByteArray) {
-        val dataSize = rawBytes.size
-        require(contentStartIndex < dataSize) { "Array index out of bound. $contentStartIndex/$dataSize" }
-
-
-    }*/
 }

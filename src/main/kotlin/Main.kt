@@ -7,7 +7,11 @@ import okio.Path.Companion.toPath
 
 private val logger = KotlinLogging.logger { }
 
-fun main() {
+fun main(args: Array<String>) {
+    oldRun()
+}
+
+fun oldRun() {
     val rawPath = "src/main/data/raw/MachineSpecList.tbl".toPath()
     val decodeOutputDir = "src/main/data/decoded/".toPath()
     val editedPath = "src/main/data/edited/MachineSpecList.txt".toPath()
@@ -20,10 +24,10 @@ fun main() {
     }
 
     val extractor = GGCRTextExtractor(logger)
-    //extractor.extractFile(rawPath, decodeOutputDir, format)
+    extractor.extractFile(rawPath, decodeOutputDir, format)
 
     val decodedUnchanged = "src/main/data/edited/MachineSpecList_same.txt".toPath()
     val packer = GGCRTextRepacker(logger)
-    packer.pack(editedPath, repackOutputDir, format)
+    //packer.pack(editedPath, repackOutputDir, format)
     //packer.pack(decodedUnchanged, repackOutputDir, format)
 }
