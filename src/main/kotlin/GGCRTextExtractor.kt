@@ -78,14 +78,6 @@ class GGCRTextExtractor(
         }
     }
 
-    /**
-     * @param fromIndex the start of the range (inclusive) to read.
-     * @param toIndex the end of the range (exclusive) to read.
-     */
-    private fun ByteArray.readUtf8Line(fromIndex: Int, toIndex: Int): String {
-        return this.copyOfRange(fromIndex, toIndex - 1).toString(Charsets.UTF_8)
-    }
-
     private fun getItemStartIndex(indexByteStartIndex: Int, rawBytes: ByteArray): Int {
         rawBytes.copyOfRange(indexByteStartIndex, indexByteStartIndex + 4)
             .also { logger.trace { it.toHexString(HexFormat.Default) } }

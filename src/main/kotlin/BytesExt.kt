@@ -23,6 +23,14 @@ fun String.toOctetBytes() =
         .map { it.toByte() }
         .toByteArray()
 
+/**
+ * @param fromIndex the start of the range (inclusive) to read.
+ * @param toIndex the end of the range (exclusive) to read.
+ */
+fun ByteArray.readUtf8Line(fromIndex: Int, toIndex: Int): String {
+    return this.copyOfRange(fromIndex, toIndex - 1).toString(Charsets.UTF_8)
+}
+
 fun ByteArray.intFromBigEndianOctetBytes(): Int {
     require(this.size == 8) { "Parsing wrong bytes! Your bytes have ${this.size} bytes, but 8 is required." }
     return this[0].toNonNegativeInt() or
