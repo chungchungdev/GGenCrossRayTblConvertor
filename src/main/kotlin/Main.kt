@@ -1,20 +1,28 @@
 package com.chungchungdev
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
-import java.nio.file.Files
 
+
+private val logger = KotlinLogging.logger {  }
 
 fun main() {
-    val decodeOutputDir = "src/main/kotlin/ggendata/decoded/"
-    val path = "src/main/kotlin/ggendata/MachineSpecList.tbl".toPath()
-    decodeToFile(path, decodeOutputDir)
-    val editedPath = "src/main/kotlin/ggendata/edited/MachineSpecList.tbl".toPath()
-    val repackOutputDir = "src/main/kotlin/ggendata/repack/".toPath()
-    encodeFromFile(path, editedPath, repackOutputDir)
+    val rawPath = "src/main/data/raw/MachineSpecList.tbl".toPath()
+    val decodeOutputDir = "src/main/data/decoded/".toPath()
+    val editedPath = "src/main/data/edited/MachineSpecList.txt".toPath()
+    val repackOutputDir = "src/main/data/repack/".toPath()
+    //decodeToFile(path, decodeOutputDir)
+    //encodeFromFile(path, editedPath, repackOutputDir)
+
+    val extractor = GGCRTextExtractor(logger)
+    //extractor.extractFile(rawPath, decodeOutputDir)
+
+    val packer = GGCRTextRepacker(logger)
+    packer.pack(editedPath, repackOutputDir)
 }
 
 fun decodeToFile(src: Path, destDir: String) {

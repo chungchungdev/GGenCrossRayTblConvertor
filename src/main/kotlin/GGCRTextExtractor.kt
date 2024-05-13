@@ -1,16 +1,15 @@
 package com.chungchungdev
 
-import okio.BufferedSink
+import io.github.oshai.kotlinlogging.KLogger
 import okio.FileSystem
 import okio.Path
-import okio.Path.Companion.toOkioPath
+import okio.Path.Companion.toPath
 import okio.buffer
-import java.nio.file.Files
-import java.util.stream.Collectors
-import kotlin.io.path.extension
-import kotlin.io.path.isDirectory
+import okio.use
 
-object GGCRTextExtractor {
+class GGCRTextExtractor(
+    private val logger: KLogger
+) {
     // First octet = file signature, keep it
     // Second octet = unknown??? just keep it
     // Then, each octet is the start index of a string item
@@ -18,77 +17,75 @@ object GGCRTextExtractor {
     // String items, each is separated by a 0x00 byte
 
     // result file also include start index of the third octet?
-    fun extract(path: Path) {
-        FileSystem.SYSTEM.source(path).buffer().use { source ->
-            val items: MutableList<String> = mutableListOf()
-            val contentLines: MutableList<String> = mutableListOf()
-            val secondOctet = ByteArray(8)
-            var consecutiveZeros = 0
-            var inContent = false
-            var contentStartIndex = -1
-            var currentIndex = 0
-            var previousByte: Byte = 0x01
-            var currentByte: Byte
+    fun extract(src: Path, out: Path) {
 
-            // Keep second octet
-            while (currentIndex in 0..15 && !source.exhausted()) {
-                currentByte = source.readByte()
-                if (currentIndex in 8..15) {
-                    secondOctet[currentIndex - 8] = currentByte
-                }
-                currentIndex++
-            }
+    }
 
-            // Find content start index
-            while (!inContent && !source.exhausted()) {
-                currentByte = source.readByte()
-                if (currentByte == 0.toByte() && currentByte == previousByte) {
-                    consecutiveZeros++
-                } else {
-                    consecutiveZeros = 0
-                }
-                if (consecutiveZeros == 8) {
-                    contentStartIndex = currentIndex + 1
-                    inContent = true
-                }
-                previousByte = currentByte
-                currentIndex++
-            }
-
-            //
-            var lineBytes: ByteArray = byteArrayOf()
-            while (!source.exhausted()) {
-                currentByte = source.readByte()
-                if (currentByte == 0.toByte()) {
-                    contentLines.add(lineBytes.toString(Charsets.UTF_8))
-                }
-                lineBytes += currentByte
-                currentIndex++
-            }
+    fun extractFile(src: Path, outDir: Path) {
+        val lines = extractStrings(src)
+        val outPath = "$outDir/${src.name.split(".")[0]}.txt".toPath()
+        logger.debug { "outPath: $outPath" }
+        FileSystem.SYSTEM.sink(outPath).buffer().use { sink ->
+            sink.writeUtf8(lines.joinToString("\n"))
         }
     }
 
-    private fun getAllPaths(path: Path): List<Path> {
-        val nioPath = path.toNioPath()
-        return if (nioPath.isDirectory()) {
-            Files.walk(nioPath, 1)
-                .filter { it.extension == "tbl" }
-                .collect(Collectors.toList())
-                .map { it.toOkioPath() }
-                .filter { it.containsTblFileSignature() }
-        } else {
-            path.takeIf { it.containsTblFileSignature() }
-                ?.let { listOf(it) } ?: emptyList()
+    private fun extractStrings(src: Path): List<String> {
+        FileSystem.SYSTEM.source(src).buffer().use { source ->
+            logger.trace { "Initial:" }
+            val rawBytes = source.readByteArray()
+
+            if (rawBytes.size <= 16) {
+                return emptyList()
+            }
+            val secondOctet = rawBytes.copyOfRange(8, 16).joinToString(",") { it.toInt().toString() }
+                .also { logger.trace { it } }
+            var currIndexBytesStartIndex = 16
+            var nextIndexBytesStartIndex = currIndexBytesStartIndex
+            var currItemStartIndex = getItemStartIndex(currIndexBytesStartIndex, rawBytes)
+            var nextItemStartIndex: Int
+            val lines: MutableList<String> = mutableListOf(secondOctet, currItemStartIndex.toString())
+
+
+            logger.trace { "In loop:" }
+            while (nextIndexBytesStartIndex + 8 < rawBytes.size) {
+                nextIndexBytesStartIndex += 8
+                nextItemStartIndex = getItemStartIndex(nextIndexBytesStartIndex, rawBytes)
+                logger.trace { "itemStartIndex: $currItemStartIndex" }
+                logger.trace { "nextStartIndex: $nextItemStartIndex" }
+                if (nextItemStartIndex == 0) {
+                    nextItemStartIndex = rawBytes.size
+                }
+                rawBytes.readUtf8Line(currItemStartIndex, nextItemStartIndex)
+                    .also { lines.add(it) }
+                currIndexBytesStartIndex += 8
+                currItemStartIndex = getItemStartIndex(nextIndexBytesStartIndex, rawBytes)
+                if (nextItemStartIndex == rawBytes.size) {
+                    break
+                }
+                nextItemStartIndex = getItemStartIndex(nextIndexBytesStartIndex + 8, rawBytes)
+            }
+            //println(lines.joinToString("\n"))
+            logger.trace { lines.fold(0) { acc, s -> acc + s.length } }
+            return lines
         }
     }
 
-    @OptIn(ExperimentalUnsignedTypes::class)
-    private fun Path.containsTblFileSignature(): Boolean {
-        FileSystem.SYSTEM.source(this).buffer().use { source ->
-            val signature = source.readByteArray(8)
-            return signature.contentEquals(TBL_FILE_SIGNATURE.toByteArray())
-        }
+    /**
+     * @param fromIndex the start of the range (inclusive) to read.
+     * @param toIndex the end of the range (exclusive) to read.
+     */
+    private fun ByteArray.readUtf8Line(fromIndex: Int, toIndex: Int): String {
+        return this.copyOfRange(fromIndex, toIndex - 1).toString(Charsets.UTF_8)
     }
 
-    private val TBL_FILE_SIGNATURE = ubyteArrayOf(0x54u, 0x52u, 0x54u, 0x53u, 0x00u, 0x01u, 0x01u, 0x00u)
+    private fun getItemStartIndex(indexByteStartIndex: Int, rawBytes: ByteArray): Int {
+        rawBytes.copyOfRange(indexByteStartIndex, indexByteStartIndex + 4)
+            .also { logger.trace { it.toHexString(HexFormat.Default) } }
+        return (((rawBytes[indexByteStartIndex].toUInt() and 0xFFu)).also { logger.trace { it.toString(16) } } or
+                ((rawBytes[indexByteStartIndex + 1].toUInt() and 0xFFu).also { logger.trace { it.toString(16) } } shl 8) or
+                ((rawBytes[indexByteStartIndex + 2].toUInt() and 0xFFu).also { logger.trace { it.toString(16) } } shl 16) or
+                ((rawBytes[indexByteStartIndex + 3].toUInt() and 0xFFu).also { logger.trace { it.toString(16) } } shl 24))
+            .toInt()
+    }
 }

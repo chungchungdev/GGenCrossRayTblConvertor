@@ -48,6 +48,7 @@ tasks.named<KotlinCompilationTask<*>>("compileKotlin").configure {
         add("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
         add("-opt-in=kotlin.contracts.ExperimentalContracts")
         add("-opt-in=kotlin.ExperimentalUnsignedTypes")
+        add("-opt-in=kotlin.ExperimentalStdlibApi")
     }
 }
 
