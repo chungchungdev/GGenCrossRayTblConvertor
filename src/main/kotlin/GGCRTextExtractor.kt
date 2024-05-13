@@ -1,6 +1,8 @@
 package com.chungchungdev
 
 import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
@@ -21,12 +23,13 @@ class GGCRTextExtractor(
 
     }
 
-    fun extractFile(src: Path, outDir: Path) {
+    fun extractFile(src: Path, outDir: Path, format: Json) {
         val lines = extractStrings(src)
+        val outputJson = format.encodeToString(lines)
         val outPath = "$outDir/${src.name.split(".")[0]}.txt".toPath()
         logger.debug { "outPath: $outPath" }
         FileSystem.SYSTEM.sink(outPath).buffer().use { sink ->
-            sink.writeUtf8(lines.joinToString("\n"))
+            sink.writeUtf8(outputJson)
         }
     }
 
