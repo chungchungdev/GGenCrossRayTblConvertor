@@ -38,13 +38,16 @@ class GGCRTextExtractor(
             if (rawBytes.size <= 16) {
                 return emptyList()
             }
-            val secondOctet = rawBytes.copyOfRange(8, 16).joinToString(",") { it.toInt().toString() }
-                .also { logger.trace { it } }
+            val secondOctet = rawBytes.copyOfRange(8, 16).joinToString(",") { it.toString() }
+                .also { logger.debug { it } }
+            val thirdOctet = rawBytes.copyOfRange(16, 24).joinToString(",") { it.toString() }
+                .also { logger.debug { it } }
+
             var currIndexBytesStartIndex = 16
             var nextIndexBytesStartIndex = currIndexBytesStartIndex
             var currItemStartIndex = getItemStartIndex(currIndexBytesStartIndex, rawBytes)
             var nextItemStartIndex: Int
-            val lines: MutableList<String> = mutableListOf(secondOctet, currItemStartIndex.toString())
+            val lines: MutableList<String> = mutableListOf(secondOctet, thirdOctet)
 
 
             logger.trace { "In loop:" }
