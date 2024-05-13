@@ -1,24 +1,5 @@
 package com.chungchungdev
 
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import kotlin.experimental.and
-import kotlin.experimental.or
-
-fun main() {
-    val thirdInt = 0x12345cae
-    val second = byteArrayOf(-117, 11, 0, 0, 0, 0, 0, 0)
-    val secondText = "-117,11,0,0,0,0,0,0".split(",")
-        .map { it.toByte() }
-        .toByteArray()
-        .contentToString().also { println(it) }
-    val third = byteArrayOf(112, 92, 0, 0, 0, 0, 0, 0)
-    val thirdText = "112,92,0,0,0,0,0,0".split(",")
-        .map { it.toByte() }
-        .toByteArray()
-        .contentToString().also { println(it) }
-    //val bytes
-}
 
 fun Int.toBigEndianOctetBytes(): ByteArray {
     val firstByte = 0x000000ff and this
