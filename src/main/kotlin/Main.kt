@@ -20,10 +20,10 @@ fun main() {
     }
 
     val extractor = GGCRTextExtractor(logger)
-    extractor.extractFile(rawPath, decodeOutputDir, format)
+    //extractor.extractFile(rawPath, decodeOutputDir, format)
 
     val decodedUnchanged = "src/main/data/edited/MachineSpecList_same.txt".toPath()
     val packer = GGCRTextRepacker(logger)
-    //packer.pack(editedPath, repackOutputDir)
-    //packer.pack(decodedUnchanged, repackOutputDir)
+    packer.pack(editedPath, repackOutputDir, format)
+    //packer.pack(decodedUnchanged, repackOutputDir, format)
 }
