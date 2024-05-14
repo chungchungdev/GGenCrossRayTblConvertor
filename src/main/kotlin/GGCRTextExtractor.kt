@@ -9,6 +9,7 @@ import okio.Path
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
+import kotlin.io.path.nameWithoutExtension
 
 class GGCRTextExtractor(
     private val logger: KLogger
@@ -27,7 +28,7 @@ class GGCRTextExtractor(
     fun extractFile(src: Path, outDir: Path, format: Json) {
         val lines = extractStrings(src).map { TblItem(it, it) }
         val outputJson = format.encodeToString(lines)
-        val outPath = "$outDir/${src.name.split(".")[0]}.txt".toPath()
+        val outPath = "$outDir/${src.toNioPath().nameWithoutExtension}.json".toPath()
         logger.debug { "outPath: $outPath" }
         FileSystem.SYSTEM.sink(outPath).buffer().use { sink ->
             sink.writeUtf8(outputJson)
